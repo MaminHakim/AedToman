@@ -1,0 +1,17 @@
+# Ignore config file
+config.json
+
+# Ignore binary files
+/your-app
+
+# Ignore Go workspace files
+/bin/
+/pkg/
+/vendor/
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore log files
+*.log
