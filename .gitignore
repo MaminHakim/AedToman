@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Ignore config file
 config.json
 
@@ -15,3 +16,6 @@ config.json
 
 # Ignore log files
 *.log
+=======
+
+>>>>>>> 0365862589bd390ed4818412a99ef176df5527f8
