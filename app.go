@@ -50,8 +50,9 @@ func main() {
 	// Get refresh time from the user
 	refreshTime := getRefreshTimeFromUser()
 
-	// Get the deduction amount from the user
-	deductionAmount := getDeductionAmountFromUser()
+	// Get the addition and deduction amounts from the user
+	buyAddition := getAmountFromUser("Enter the amount to add to buy price: ")
+	sellDeduction := getAmountFromUser("Enter the amount to deduct from sell price: ")
 
 	client := resty.New() // HTTP client
 
@@ -81,7 +82,7 @@ func main() {
 		}
 
 		// Extract and display AED currency information
-		showAEDCurrency(resp.String(), deductionAmount, config.TelegramToken, config.ChatID, &firstRun)
+		showAEDCurrency(resp.String(), buyAddition, sellDeduction, config.TelegramToken, config.ChatID, &firstRun)
 
 		// Wait for the specified refresh time
 		time.Sleep(time.Duration(refreshTime) * time.Minute)
@@ -109,29 +110,29 @@ func getRefreshTimeFromUser() int {
 	return refreshTime
 }
 
-// Get deduction amount from the user
-func getDeductionAmountFromUser() float64 {
+// Get amount from the user (for addition or deduction)
+func getAmountFromUser(prompt string) float64 {
 	reader := bufio.NewReader(os.Stdin)
-	color.Yellow("Enter the amount to deduct from prices: ")
+	color.Yellow(prompt)
 	input, _ := reader.ReadString('\n')
 
 	// Remove extra characters and convert to float64
-	deductionAmount, err := strconv.ParseFloat(input[:len(input)-1], 64)
+	amount, err := strconv.ParseFloat(input[:len(input)-1], 64)
 	if err != nil {
-		color.Red("Error converting deduction amount to a number: %s\n", err)
+		color.Red("Error converting amount to a number: %s\n", err)
 		os.Exit(1)
 	}
 
-	if deductionAmount < 0 {
-		color.Red("Deduction amount cannot be negative.\n")
+	if amount < 0 {
+		color.Red("Amount cannot be negative.\n")
 		os.Exit(1)
 	}
 
-	return deductionAmount
+	return amount
 }
 
 // Display AED currency information and send to Telegram if there are changes
-func showAEDCurrency(jsonStr string, deductionAmount float64, telegramToken, chatID string, firstRun *bool) {
+func showAEDCurrency(jsonStr string, buyAddition, sellDeduction float64, telegramToken, chatID string, firstRun *bool) {
 	var data map[string]interface{} // To hold JSON data
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
 		color.Red("Error processing JSON: %s\n", err)
@@ -160,21 +161,21 @@ func showAEDCurrency(jsonStr string, deductionAmount float64, telegramToken, cha
 		return
 	}
 
-	// Get current prices
-	currentPrice, _ := strconv.ParseFloat(fmt.Sprintf("%v", aedCurrency["price"]), 64)
-	currentSellPrice, _ := strconv.ParseFloat(fmt.Sprintf("%v", aedCurrency["sellPrice"]), 64)
+	// Get current prices (swap buy and sell prices)
+	currentSellPrice, _ := strconv.ParseFloat(fmt.Sprintf("%v", aedCurrency["price"]), 64)
+	currentPrice, _ := strconv.ParseFloat(fmt.Sprintf("%v", aedCurrency["sellPrice"]), 64)
 
-	// Deduct the specified amount from prices
-	adjustedPrice := currentPrice - deductionAmount
-	adjustedSellPrice := currentSellPrice - deductionAmount
+	// Adjust prices
+	adjustedBuyPrice := currentPrice + buyAddition
+	adjustedSellPrice := currentSellPrice - sellDeduction
 
 	// Format the terminal message in English
 	terminalMessage := fmt.Sprintf(
 		"AED/TOMAN (Transfer) 🇦🇪\n\n"+
 			"Sell: %s\n"+
 			"Buy: %s\n",
-		formatNumber(adjustedPrice),
 		formatNumber(adjustedSellPrice),
+		formatNumber(adjustedBuyPrice),
 	)
 
 	// Display the terminal message
@@ -185,8 +186,8 @@ func showAEDCurrency(jsonStr string, deductionAmount float64, telegramToken, cha
 		"درهم/تومان (حواله) 🇦🇪\n\n"+
 			"%s :فروش\n"+
 			"%s :خرید\n",
-		formatNumber(adjustedPrice),
 		formatNumber(adjustedSellPrice),
+		formatNumber(adjustedBuyPrice),
 	)
 
 	// Send the Telegram message if it's the first run or prices have changed
@@ -200,8 +201,8 @@ func showAEDCurrency(jsonStr string, deductionAmount float64, telegramToken, cha
 					"درهم/تومان (حواله) 🇦🇪\n\n"+
 					"%s :فروش %s\n"+
 					"%s :خرید %s\n",
-				formatNumber(adjustedPrice), getChangeSymbol(lastPrice, currentPrice),
 				formatNumber(adjustedSellPrice), getChangeSymbol(lastSellPrice, currentSellPrice),
+				formatNumber(adjustedBuyPrice), getChangeSymbol(lastPrice, currentPrice),
 			)
 			sendTelegramMessage(changeMessage, telegramToken, chatID)
 		}
@@ -236,7 +237,7 @@ func formatNumber(num float64) string {
 	return p.Sprintf("%.0f", num) // Formats without decimal places
 }
 
-// Send a message to Telegram
+// Send a message to TelegramBot
 func sendTelegramMessage(text, telegramToken, chatID string) {
 	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", telegramToken)
 	payload := map[string]string{
