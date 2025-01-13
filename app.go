@@ -192,10 +192,8 @@ func showAEDCurrency(jsonStr string, buyAddition, sellDeduction float64, telegra
 
 	// Send the Telegram message if it's the first run or prices have changed
 	if *firstRun || currentPrice != lastPrice || currentSellPrice != lastSellPrice {
-		sendTelegramMessage(telegramMessage, telegramToken, chatID)
-
-		// If prices have changed, send a separate change message
 		if !*firstRun && (currentPrice != lastPrice || currentSellPrice != lastSellPrice) {
+			// ارسال پیام تغییر قیمت
 			changeMessage := fmt.Sprintf(
 				"تغییر قیمت! 🚨\n\n"+
 					"درهم/تومان (حواله) 🇦🇪\n\n"+
@@ -205,13 +203,16 @@ func showAEDCurrency(jsonStr string, buyAddition, sellDeduction float64, telegra
 				formatNumber(adjustedBuyPrice), getChangeSymbol(lastPrice, currentPrice),
 			)
 			sendTelegramMessage(changeMessage, telegramToken, chatID)
+		} else {
+			// ارسال پیام اصلی (فقط در اولین اجرا)
+			sendTelegramMessage(telegramMessage, telegramToken, chatID)
 		}
 
-		// Update last prices
+		// به‌روزرسانی آخرین قیمت‌ها
 		lastPrice = currentPrice
 		lastSellPrice = currentSellPrice
 
-		// Mark first run as false after the first execution
+		// علامت‌گذاری اولین اجرا
 		if *firstRun {
 			*firstRun = false
 		}
