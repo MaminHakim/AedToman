@@ -257,8 +257,3 @@ func sendTelegramMessage(text, telegramToken, chatID string) {
 		color.Green("Message sent to Telegram successfully!\n")
 	}
 }
-
-//test webhook
-//test second
-//test third
-//test forth
