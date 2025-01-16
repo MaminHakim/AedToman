@@ -169,11 +169,17 @@ func showAEDCurrency(jsonStr string, buyAddition, sellDeduction float64, telegra
 	adjustedBuyPrice := currentPrice + buyAddition
 	adjustedSellPrice := currentSellPrice - sellDeduction
 
+	// Get current time in Iran (IRST)
+	loc, _ := time.LoadLocation("Asia/Tehran")
+	currentTime := time.Now().In(loc).Format("15:04")
+
 	// Format the terminal message in English
 	terminalMessage := fmt.Sprintf(
-		"AED/TOMAN (Transfer) 🇦🇪\n\n"+
+		"Time (IRST): %s\n\n"+
+			"AED/TOMAN (Transfer) 🇦🇪\n\n"+
 			"Sell: %s\n"+
 			"Buy: %s\n",
+		currentTime,
 		formatNumber(adjustedSellPrice),
 		formatNumber(adjustedBuyPrice),
 	)
@@ -183,9 +189,11 @@ func showAEDCurrency(jsonStr string, buyAddition, sellDeduction float64, telegra
 
 	// Format the Telegram message in Persian
 	telegramMessage := fmt.Sprintf(
-		"درهم/تومان (حواله) 🇦🇪\n\n"+
+		"زمان (به وقت ایران): %s\n\n"+
+			"درهم/تومان (حواله) 🇦🇪\n\n"+
 			"%s :فروش\n"+
 			"%s :خرید\n",
+		currentTime,
 		formatNumber(adjustedSellPrice),
 		formatNumber(adjustedBuyPrice),
 	)
@@ -195,10 +203,12 @@ func showAEDCurrency(jsonStr string, buyAddition, sellDeduction float64, telegra
 		if !*firstRun && (currentPrice != lastPrice || currentSellPrice != lastSellPrice) {
 			// ارسال پیام تغییر قیمت
 			changeMessage := fmt.Sprintf(
-				"تغییر قیمت! 🚨\n\n"+
+				"زمان (به وقت ایران): %s\n\n"+
+					"تغییر قیمت! 🚨\n\n"+
 					"درهم/تومان (حواله) 🇦🇪\n\n"+
 					"%s :فروش %s\n"+
 					"%s :خرید %s\n",
+				currentTime,
 				formatNumber(adjustedSellPrice), getChangeSymbol(lastSellPrice, currentSellPrice),
 				formatNumber(adjustedBuyPrice), getChangeSymbol(lastPrice, currentPrice),
 			)
