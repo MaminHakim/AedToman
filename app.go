@@ -15,7 +15,7 @@ import (
 )
 
 // Variables to store the last prices
-var lastPrice, lastSellPrice float64
+var lastPrice, lastSellPrice, lastAlipayPrice float64
 
 // Config structure to hold configuration data
 type Config struct {
@@ -81,8 +81,8 @@ func main() {
 			continue
 		}
 
-		// Extract and display AED currency information
-		showAEDCurrency(resp.String(), buyAddition, sellDeduction, config.TelegramToken, config.ChatID, &firstRun)
+		// Extract and display AED and Alipay currency information
+		showCurrencies(resp.String(), buyAddition, sellDeduction, config.TelegramToken, config.ChatID, &firstRun)
 
 		// Wait for the specified refresh time
 		time.Sleep(time.Duration(refreshTime) * time.Minute)
@@ -131,8 +131,8 @@ func getAmountFromUser(prompt string) float64 {
 	return amount
 }
 
-// Display AED currency information and send to Telegram if there are changes
-func showAEDCurrency(jsonStr string, buyAddition, sellDeduction float64, telegramToken, chatID string, firstRun *bool) {
+// Display AED and Alipay currency information and send to Telegram if there are changes
+func showCurrencies(jsonStr string, buyAddition, sellDeduction float64, telegramToken, chatID string, firstRun *bool) {
 	var data map[string]interface{} // To hold JSON data
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
 		color.Red("Error processing JSON: %s\n", err)
@@ -146,28 +146,36 @@ func showAEDCurrency(jsonStr string, buyAddition, sellDeduction float64, telegra
 		return
 	}
 
-	// Find the AED currency
-	var aedCurrency map[string]interface{}
+	// Find the AED and Alipay currencies
+	var aedCurrency, alipayCurrency map[string]interface{}
 	for _, currency := range currencies {
 		curr := currency.(map[string]interface{})
 		if curr["symbol"] == "AED" {
 			aedCurrency = curr
-			break
+		} else if curr["nameEn"] == "ALIPAY" { // Alipay currency ID
+			alipayCurrency = curr
 		}
 	}
 
-	if aedCurrency == nil {
-		color.Red("AED currency not found\n")
+	if aedCurrency == nil || alipayCurrency == nil {
+		color.Red("AED or Alipay currency not found\n")
 		return
 	}
 
-	// Get current prices (swap buy and sell prices)
+	// Get current prices (swap buy and sell prices for AED)
 	currentSellPrice, _ := strconv.ParseFloat(fmt.Sprintf("%v", aedCurrency["price"]), 64)
 	currentPrice, _ := strconv.ParseFloat(fmt.Sprintf("%v", aedCurrency["sellPrice"]), 64)
+
+	// Get Alipay price
+	alipayPrice, _ := strconv.ParseFloat(fmt.Sprintf("%v", alipayCurrency["userPrice"]), 64)
 
 	// Adjust prices
 	adjustedBuyPrice := currentPrice + buyAddition
 	adjustedSellPrice := currentSellPrice - sellDeduction
+
+	// Calculate Alipay transfer prices
+	// alipayBuyPrice := adjustedBuyPrice / alipayPrice
+	alipaySellPrice := adjustedSellPrice / alipayPrice
 
 	// Get current time in Iran (IRST)
 	loc, _ := time.LoadLocation("Asia/Tehran")
@@ -178,10 +186,15 @@ func showAEDCurrency(jsonStr string, buyAddition, sellDeduction float64, telegra
 		"Time (IRST): %s\n\n"+
 			"AED/TOMAN (Transfer) 🇦🇪\n\n"+
 			"Sell: %s\n"+
-			"Buy: %s\n",
+			"Buy: %s\n\n"+
+			"Alipay/TOMAN (Transfer) 🇨🇳\n\n"+
+			"Sell: %s\n",
+		// "Buy: %s\n",
 		currentTime,
 		formatNumber(adjustedSellPrice),
 		formatNumber(adjustedBuyPrice),
+		formatNumber(alipaySellPrice),
+		// formatNumber(alipayBuyPrice),
 	)
 
 	// Display the terminal message
@@ -192,37 +205,48 @@ func showAEDCurrency(jsonStr string, buyAddition, sellDeduction float64, telegra
 		"زمان (به وقت ایران): %s\n\n"+
 			"درهم/تومان (حواله) 🇦🇪\n\n"+
 			"%s :فروش\n"+
-			"%s :خرید\n",
+			"%s :خرید\n\n"+
+			"حواله Alipay/تومان🇨🇳\n\n"+
+			"%s :فروش\n",
+		// "%s :خرید\n",
 		currentTime,
 		formatNumber(adjustedSellPrice),
 		formatNumber(adjustedBuyPrice),
+		formatNumber(alipaySellPrice),
+	// 	formatNumber(alipayBuyPrice),
 	)
 
 	// Send the Telegram message if it's the first run or prices have changed
-	if *firstRun || currentPrice != lastPrice || currentSellPrice != lastSellPrice {
-		if !*firstRun && (currentPrice != lastPrice || currentSellPrice != lastSellPrice) {
-			// ارسال پیام تغییر قیمت
+	if *firstRun || currentPrice != lastPrice || currentSellPrice != lastSellPrice || alipayPrice != lastAlipayPrice {
+		if !*firstRun && (currentPrice != lastPrice || currentSellPrice != lastSellPrice || alipayPrice != lastAlipayPrice) {
+			// Send price change message
 			changeMessage := fmt.Sprintf(
 				"زمان (به وقت ایران): %s\n\n"+
 					"تغییر قیمت! 🚨\n\n"+
 					"درهم/تومان (حواله) 🇦🇪\n\n"+
 					"%s :فروش %s\n"+
-					"%s :خرید %s\n",
+					"%s :خرید %s\n\n"+
+					"Alipay/تومان (حواله) 🇨🇳\n\n"+
+					"%s :فروش %s\n",
+				// "%s :خرید %s\n",
 				currentTime,
 				formatNumber(adjustedSellPrice), getChangeSymbol(lastSellPrice, currentSellPrice),
 				formatNumber(adjustedBuyPrice), getChangeSymbol(lastPrice, currentPrice),
+				formatNumber(alipaySellPrice), getChangeSymbol(lastAlipayPrice, alipayPrice),
+				// formatNumber(alipayBuyPrice), getChangeSymbol(lastAlipayPrice, alipayPrice),
 			)
 			sendTelegramMessage(changeMessage, telegramToken, chatID)
 		} else {
-			// ارسال پیام اصلی (فقط در اولین اجرا)
+			// Send the main message (only on the first run)
 			sendTelegramMessage(telegramMessage, telegramToken, chatID)
 		}
 
-		// به‌روزرسانی آخرین قیمت‌ها
+		// Update the last prices
 		lastPrice = currentPrice
 		lastSellPrice = currentSellPrice
+		lastAlipayPrice = alipayPrice
 
-		// علامت‌گذاری اولین اجرا
+		// Mark the first run as completed
 		if *firstRun {
 			*firstRun = false
 		}
