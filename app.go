@@ -226,7 +226,7 @@ func showCurrencies(jsonStr string, buyAddition, sellDeduction float64, telegram
 					"درهم/تومان (حواله) 🇦🇪\n\n"+
 					"%s :فروش %s\n"+
 					"%s :خرید %s\n\n"+
-					"Alipay/تومان (حواله) 🇨🇳\n\n"+
+					"حواله Alipay/تومان🇨🇳\n\n"+
 					"%s :فروش %s\n",
 				// "%s :خرید %s\n",
 				currentTime,
