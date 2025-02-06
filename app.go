@@ -219,7 +219,7 @@ func showCurrencies(jsonStr string, buyAddition, sellDeduction float64, telegram
 	// Send the Telegram message if it's the first run or prices have changed
 	if *firstRun || currentPrice != lastPrice || currentSellPrice != lastSellPrice || alipayPrice != lastAlipayPrice {
 		if !*firstRun && (currentPrice != lastPrice || currentSellPrice != lastSellPrice || alipayPrice != lastAlipayPrice) {
-			// Send price change message
+			// Send price change messages
 			changeMessage := fmt.Sprintf(
 				"زمان (به وقت ایران): %s\n\n"+
 					"تغییر قیمت! 🚨\n\n"+
