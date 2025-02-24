@@ -186,14 +186,14 @@ func showCurrencies(jsonStr string, buyAddition, sellDeduction float64, telegram
 		"Time (IRST): %s\n\n"+
 			"AED/TOMAN (Transfer) 🇦🇪\n\n"+
 			"Sell: %s\n"+
-			"Buy: %s\n\n"+
-			"Alipay/TOMAN (Transfer) 🇨🇳\n\n"+
-			"Sell: %s\n",
+			"Buy: %s\n\n",
+		// "Alipay/TOMAN (Transfer) 🇨🇳\n\n"+
+		// "Sell: %s\n",
 		// "Buy: %s\n",
 		currentTime,
 		formatNumber(adjustedSellPrice),
 		formatNumber(adjustedBuyPrice),
-		formatNumber(alipaySellPrice),
+		// formatNumber(alipaySellPrice),
 		// formatNumber(alipayBuyPrice),
 	)
 
@@ -205,14 +205,14 @@ func showCurrencies(jsonStr string, buyAddition, sellDeduction float64, telegram
 		"زمان (به وقت ایران): %s\n\n"+
 			"درهم/تومان (حواله) 🇦🇪\n\n"+
 			"%s :فروش\n"+
-			"%s :خرید\n\n"+
-			"حواله Alipay/تومان🇨🇳\n\n"+
-			"%s :فروش\n",
+			"%s :خرید\n\n",
+		// "حواله Alipay/تومان🇨🇳\n\n"+
+		// "%s :فروش\n",
 		// "%s :خرید\n",
 		currentTime,
 		formatNumber(adjustedSellPrice),
 		formatNumber(adjustedBuyPrice),
-		formatNumber(alipaySellPrice),
+		// formatNumber(alipaySellPrice),
 	// 	formatNumber(alipayBuyPrice),
 	)
 
@@ -225,14 +225,14 @@ func showCurrencies(jsonStr string, buyAddition, sellDeduction float64, telegram
 					"تغییر قیمت! 🚨\n\n"+
 					"درهم/تومان (حواله) 🇦🇪\n\n"+
 					"%s :فروش %s\n"+
-					"%s :خرید %s\n\n"+
-					"حواله Alipay/تومان🇨🇳\n\n"+
-					"%s :فروش %s\n",
+					"%s :خرید %s\n\n",
+				// "حواله Alipay/تومان🇨🇳\n\n"+
+				// "%s :فروش %s\n",
 				// "%s :خرید %s\n",
 				currentTime,
 				formatNumber(adjustedSellPrice), getChangeSymbol(lastSellPrice, currentSellPrice),
 				formatNumber(adjustedBuyPrice), getChangeSymbol(lastPrice, currentPrice),
-				formatNumber(alipaySellPrice), getChangeSymbol(lastAlipayPrice, alipayPrice),
+				// formatNumber(alipaySellPrice), getChangeSymbol(lastAlipayPrice, alipayPrice),
 				// formatNumber(alipayBuyPrice), getChangeSymbol(lastAlipayPrice, alipayPrice),
 			)
 			sendTelegramMessage(changeMessage, telegramToken, chatID)
