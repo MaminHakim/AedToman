@@ -175,7 +175,7 @@ func showCurrencies(jsonStr string, buyAddition, sellDeduction float64, telegram
 
 	// Calculate Alipay transfer prices
 	// alipayBuyPrice := adjustedBuyPrice / alipayPrice
-	alipaySellPrice := adjustedSellPrice / alipayPrice
+	// alipaySellPrice := adjustedSellPrice / alipayPrice
 
 	// Get current time in Iran (IRST)
 	loc, _ := time.LoadLocation("Asia/Tehran")
