@@ -185,10 +185,10 @@ func showCurrencies(jsonStr string, buyAddition, sellDeduction float64, telegram
 
 	// Format the Telegram/WhatsApp message in Persian
 	telegramMessage := fmt.Sprintf(
-		"زمان (به وقت ایران): %s\n\n"+
-			"درهم/تومان (حواله) 🇦🇪\n\n"+
+		"زمان (به وقت ایران): %s\n"+
+			// "درهم/تومان (حواله) 🇦🇪\n\n"+
 			"%s :فروش\n"+
-			"%s :خرید\n\n",
+			"%s :خرید\n",
 		currentTime,
 		formatNumber(adjustedSellPrice),
 		formatNumber(adjustedBuyPrice),
@@ -199,11 +199,10 @@ func showCurrencies(jsonStr string, buyAddition, sellDeduction float64, telegram
 		if !*firstRun && (currentPrice != lastPrice || currentSellPrice != lastSellPrice || alipayPrice != lastAlipayPrice) {
 			// Send price change messages
 			changeMessage := fmt.Sprintf(
-				"زمان (به وقت ایران): %s\n\n"+
-					"تغییر قیمت! 🚨\n\n"+
-					"درهم/تومان (حواله) 🇦🇪\n\n"+
+				"زمان (به وقت ایران): %s\n"+
+					// "درهم/تومان (حواله) 🇦🇪\n\n"+
 					"%s :فروش %s\n"+
-					"%s :خرید %s\n\n",
+					"%s :خرید %s\n",
 				currentTime,
 				formatNumber(adjustedSellPrice), getChangeSymbol(lastSellPrice, currentSellPrice),
 				formatNumber(adjustedBuyPrice), getChangeSymbol(lastPrice, currentPrice),
